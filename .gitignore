@@ -4,5 +4,8 @@
 *.tfvars
 .terraform.lock.hcl
 infra/scale_handler.zip
+infra/dlq_alert_handler.zip
+*.zip
+venv/
 __pycache__/
 *.py[cod]

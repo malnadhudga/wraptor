@@ -15,5 +15,5 @@ output "dlq_url" {
 }
 
 output "ecr_repository_url" {
-  value = aws_ecr_repository.worker.repository_url
+  value = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.name}"
 }
