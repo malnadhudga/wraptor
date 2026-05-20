@@ -4,10 +4,10 @@ set -e
 NAME=$1
 EMAIL=$2
 REGION=${3:-us-east-1}
-INPUT_EXTENSION=${4:-.fasta}
+INPUT_EXTENSION=$4
 
-if [ -z "$NAME" ] || [ -z "$EMAIL" ]; then
-  echo "Usage: ./deploy.sh <name> <email> [region] [input_extension]"
+if [ -z "$NAME" ] || [ -z "$EMAIL" ] || [ -z "$INPUT_EXTENSION" ]; then
+  echo "Usage: ./deploy.sh <name> <email> [region] <input_extension>"
   echo "Example: ./deploy.sh vespag user@example.com us-east-1 .csv"
   exit 1
 fi
