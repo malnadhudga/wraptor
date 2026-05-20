@@ -35,3 +35,8 @@ variable "use_gpu" {
   default     = false
 }
 
+variable "use_gpu" {
+  description = "Use GPU instances (true) or CPU instances (false)"
+  default     = false
+}
+
