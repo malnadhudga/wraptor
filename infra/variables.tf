@@ -26,6 +26,12 @@ variable "max_instances" {
 }
 
 variable "input_extension" {
-  description = "Input file extension (e.g. .fasta, .pdb)"
+  description = "Input file extension (e.g. .fasta, .csv)"
   default     = ".fasta"
+}
+
+variable "extra_env" {
+  description = "Extra environment variables passed to the worker container (key=value pairs)"
+  type        = map(string)
+  default     = {}
 }
