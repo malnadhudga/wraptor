@@ -40,19 +40,14 @@ locals {
 }
 
 resource "aws_launch_template" "worker" {
-  name          = "${var.name}-worker"
-  image_id      = data.aws_ami.deep_learning.id
-  instance_type = var.instance_type
+  name     = "${var.name}-worker"
+  image_id = data.aws_ami.deep_learning.id
 
   iam_instance_profile {
     arn = aws_iam_instance_profile.ec2_worker.arn
   }
 
   vpc_security_group_ids = [aws_security_group.worker.id]
-
-  instance_market_options {
-    market_type = "spot"
-  }
 
   user_data = base64encode(local.user_data)
 
@@ -70,9 +65,24 @@ resource "aws_autoscaling_group" "worker" {
   vpc_zone_identifier = data.aws_subnets.default.ids
   health_check_type   = "EC2"
 
-  launch_template {
-    id      = aws_launch_template.worker.id
-    version = "$Latest"
+  mixed_instances_policy {
+    instances_distribution {
+      on_demand_base_capacity                  = 0
+      on_demand_percentage_above_base_capacity = 0
+      spot_allocation_strategy                 = "capacity-optimized"
+    }
+
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.worker.id
+        version            = "$Latest"
+      }
+
+      # ASG tries these in order of spot capacity availability
+      override { instance_type = "g4dn.xlarge"  }  # T4  16GB VRAM ~$0.17/hr
+      override { instance_type = "g4dn.2xlarge" }  # T4  16GB VRAM ~$0.24/hr
+      override { instance_type = "g5.xlarge"    }  # A10G 24GB VRAM ~$0.36/hr
+    }
   }
 
   tag {
