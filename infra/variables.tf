@@ -30,3 +30,8 @@ variable "input_extension" {
   default     = ".fasta"
 }
 
+variable "use_gpu" {
+  description = "Use GPU instances (true) or CPU instances (false)"
+  default     = false
+}
+
