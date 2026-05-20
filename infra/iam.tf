@@ -115,6 +115,28 @@ resource "aws_iam_role_policy" "lambda" {
         Resource = aws_sqs_queue.jobs.arn
       },
       {
+        Sid    = "DLQConsume"
+        Effect = "Allow"
+        Action = [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes"
+        ]
+        Resource = aws_sqs_queue.dlq.arn
+      },
+      {
+        Sid      = "SNSPublish"
+        Effect   = "Allow"
+        Action   = ["sns:Publish"]
+        Resource = aws_sns_topic.alerts.arn
+      },
+      {
+        Sid    = "LogsRead"
+        Effect = "Allow"
+        Action = ["logs:FilterLogEvents"]
+        Resource = aws_cloudwatch_log_group.worker.arn
+      },
+      {
         Sid    = "CloudWatchLogs"
         Effect = "Allow"
         Action = [
