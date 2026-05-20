@@ -55,6 +55,26 @@ resource "aws_lambda_event_source_mapping" "dlq_trigger" {
   batch_size       = 1
 }
 
+# ── Scheduled scale check (every 60s) ────────────────────────────────────────
+
+resource "aws_cloudwatch_event_rule" "scale_schedule" {
+  name                = "${var.name}-scale-schedule"
+  schedule_expression = "rate(1 minute)"
+}
+
+resource "aws_cloudwatch_event_target" "scale_schedule" {
+  rule = aws_cloudwatch_event_rule.scale_schedule.name
+  arn  = aws_lambda_function.scale_handler.arn
+}
+
+resource "aws_lambda_permission" "scale_schedule" {
+  statement_id  = "AllowSchedule"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.scale_handler.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.scale_schedule.arn
+}
+
 # ── Scale-out trigger ────────────────────────────────────────────────────────
 
 resource "aws_cloudwatch_event_rule" "scale_out" {
