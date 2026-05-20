@@ -14,8 +14,6 @@ data "aws_ami" "deep_learning" {
 }
 
 locals {
-  extra_env_flags = join(" ", [for k, v in var.extra_env : "-e ${k}=${v}"])
-
   user_data = <<-EOF
     #!/bin/bash
     set -e
@@ -34,7 +32,6 @@ locals {
       -e OUTPUT_BUCKET=${aws_s3_bucket.output.bucket} \
       -e INPUT_EXTENSION=${var.input_extension} \
       -e AWS_REGION=${var.region} \
-      ${local.extra_env_flags} \
       ${var.ecr_image_uri}
   EOF
 }

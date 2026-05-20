@@ -24,4 +24,4 @@ set -e
 #
 # ---------------------------------------------------------------------
 
-python3 /app/predict.py
+vespag predict -i /tmp/input/data.fasta -o /tmp/output --single-csv
