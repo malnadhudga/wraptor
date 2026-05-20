@@ -56,7 +56,7 @@ resource "aws_iam_role_policy" "ec2_worker" {
           "ecr:BatchGetImage",
           "ecr:GetDownloadUrlForLayer"
         ]
-        Resource = aws_ecr_repository.worker.arn
+        Resource = "arn:aws:ecr:${var.region}:${data.aws_caller_identity.current.account_id}:repository/${var.name}"
       },
       {
         Sid    = "CloudWatchLogs"
@@ -113,6 +113,28 @@ resource "aws_iam_role_policy" "lambda" {
         Effect   = "Allow"
         Action   = ["sqs:GetQueueAttributes"]
         Resource = aws_sqs_queue.jobs.arn
+      },
+      {
+        Sid    = "DLQConsume"
+        Effect = "Allow"
+        Action = [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes"
+        ]
+        Resource = aws_sqs_queue.dlq.arn
+      },
+      {
+        Sid      = "SNSPublish"
+        Effect   = "Allow"
+        Action   = ["sns:Publish"]
+        Resource = aws_sns_topic.alerts.arn
+      },
+      {
+        Sid    = "LogsRead"
+        Effect = "Allow"
+        Action = ["logs:FilterLogEvents"]
+        Resource = aws_cloudwatch_log_group.worker.arn
       },
       {
         Sid    = "CloudWatchLogs"

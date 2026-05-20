@@ -22,6 +22,39 @@ resource "aws_lambda_function" "scale_handler" {
   }
 }
 
+# ── DLQ alert handler ────────────────────────────────────────────────────────
+
+data "archive_file" "dlq_alert_handler" {
+  type        = "zip"
+  source_file = "${path.module}/../lambda/dlq_alert_handler.py"
+  output_path = "${path.module}/dlq_alert_handler.zip"
+}
+
+resource "aws_lambda_function" "dlq_alert_handler" {
+  function_name    = "${var.name}-dlq-alert-handler"
+  filename         = data.archive_file.dlq_alert_handler.output_path
+  source_code_hash = data.archive_file.dlq_alert_handler.output_base64sha256
+  handler          = "dlq_alert_handler.handler"
+  runtime          = "python3.11"
+  role             = aws_iam_role.lambda.arn
+  timeout          = 30
+
+  environment {
+    variables = {
+      SNS_TOPIC_ARN = aws_sns_topic.alerts.arn
+      LOG_GROUP     = aws_cloudwatch_log_group.worker.name
+      AWS_REGION    = var.region
+      WRAPTOR_NAME  = var.name
+    }
+  }
+}
+
+resource "aws_lambda_event_source_mapping" "dlq_trigger" {
+  event_source_arn = aws_sqs_queue.dlq.arn
+  function_name    = aws_lambda_function.dlq_alert_handler.arn
+  batch_size       = 1
+}
+
 # ── Scale-out trigger ────────────────────────────────────────────────────────
 
 resource "aws_cloudwatch_event_rule" "scale_out" {
