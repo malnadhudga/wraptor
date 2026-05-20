@@ -14,6 +14,11 @@ data "aws_ami" "deep_learning" {
 }
 
 locals {
+  gpu_instances = ["g4dn.xlarge", "g4dn.2xlarge", "g5.xlarge"]
+  cpu_instances = ["c5.2xlarge", "m5.2xlarge", "c6i.2xlarge"]
+  instance_types = var.use_gpu ? local.gpu_instances : local.cpu_instances
+  gpu_flag       = var.use_gpu ? "--gpus all" : ""
+
   user_data = <<-EOF
     #!/bin/bash
     set -e
@@ -21,8 +26,7 @@ locals {
     aws ecr get-login-password --region ${var.region} | \
       docker login --username AWS --password-stdin $REGISTRY
     docker pull ${var.ecr_image_uri}
-    docker run -d \
-      --gpus all \
+    docker run -d ${local.gpu_flag} \
       --restart unless-stopped \
       --log-driver=awslogs \
       --log-opt awslogs-region=${var.region} \
@@ -75,10 +79,12 @@ resource "aws_autoscaling_group" "worker" {
         version            = "$Latest"
       }
 
-      # ASG tries these in order of spot capacity availability
-      override { instance_type = "g4dn.xlarge"  }  # T4  16GB VRAM ~$0.17/hr
-      override { instance_type = "g4dn.2xlarge" }  # T4  16GB VRAM ~$0.24/hr
-      override { instance_type = "g5.xlarge"    }  # A10G 24GB VRAM ~$0.36/hr
+      dynamic "override" {
+        for_each = local.instance_types
+        content {
+          instance_type = override.value
+        }
+      }
     }
   }
 
