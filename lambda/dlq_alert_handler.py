@@ -20,7 +20,7 @@ def _get_error_line(job_id: str) -> str:
     try:
         resp = logs.filter_log_events(
             logGroupName=LOG_GROUP,
-            filterPattern=f'"[{job_id}]" "Failed"',
+            filterPattern=f'"{job_id}" "Failed"',
             limit=1,
         )
         events = resp.get('events', [])
@@ -32,7 +32,7 @@ def _get_error_line(job_id: str) -> str:
 
 
 def _cloudwatch_link(job_id: str) -> str:
-    filter_pattern = urllib.parse.quote(f'[{job_id}]')
+    filter_pattern = urllib.parse.quote(f'"{job_id}"', safe='')
     log_group_encoded = urllib.parse.quote(LOG_GROUP, safe='')
     return (
         f"https://{AWS_REGION}.console.aws.amazon.com/cloudwatch/home"
