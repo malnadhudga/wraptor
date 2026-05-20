@@ -7,6 +7,13 @@ import subprocess
 import threading
 from pathlib import Path
 
+try:
+    import urllib.request as _urllib
+except ImportError:
+    _urllib = None
+
+METADATA_URL = "http://169.254.169.254/latest/meta-data/spot/interruption-notice"
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s'
@@ -33,6 +40,17 @@ def cleanup():
     shutil.rmtree(OUTPUT_DIR, ignore_errors=True)
     INPUT_DIR.mkdir(parents=True)
     OUTPUT_DIR.mkdir(parents=True)
+
+
+def spot_watcher(job_id: str, stop_event: threading.Event):
+    while not stop_event.wait(5):
+        try:
+            req = _urllib.urlopen(METADATA_URL, timeout=1)
+            if req.status == 200:
+                logger.warning(f"[SPOT_INTERRUPTED] job_id={job_id} instance reclaimed by AWS")
+                break
+        except Exception:
+            pass
 
 
 def heartbeat(receipt_handle: str, stop_event: threading.Event):
@@ -75,8 +93,8 @@ def process(message: dict):
     cleanup()
 
     stop_event = threading.Event()
-    t = threading.Thread(target=heartbeat, args=(receipt_handle, stop_event), daemon=True)
-    t.start()
+    threading.Thread(target=heartbeat, args=(receipt_handle, stop_event), daemon=True).start()
+    threading.Thread(target=spot_watcher, args=(job_id, stop_event), daemon=True).start()
 
     try:
         download_input(input_s3_path)
