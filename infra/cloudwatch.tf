@@ -60,20 +60,4 @@ resource "aws_cloudwatch_metric_alarm" "scale_in" {
   }
 }
 
-resource "aws_cloudwatch_metric_alarm" "dlq_alert" {
-  alarm_name          = "${var.name}-dlq-alert"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = 1
-  metric_name         = "ApproximateNumberOfMessagesVisible"
-  namespace           = "AWS/SQS"
-  period              = 60
-  statistic           = "Sum"
-  threshold           = 1
-  alarm_description   = "Job permanently failed — check DLQ"
-
-  dimensions = {
-    QueueName = aws_sqs_queue.dlq.name
-  }
-
-  alarm_actions = [aws_sns_topic.alerts.arn]
-}
+# DLQ alerts are handled by aws_lambda_event_source_mapping in lambda.tf
