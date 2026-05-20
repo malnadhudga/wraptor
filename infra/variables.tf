@@ -26,8 +26,7 @@ variable "max_instances" {
 }
 
 variable "input_extension" {
-  description = "Input file extension (e.g. .fasta, .csv)"
-  default     = ".csv"
+  description = "Input file extension matching your model's expected input (e.g. .csv, .fasta, .txt)"
 }
 
 variable "use_gpu" {
