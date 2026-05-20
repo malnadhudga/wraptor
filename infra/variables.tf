@@ -30,8 +30,3 @@ variable "input_extension" {
   default     = ".fasta"
 }
 
-variable "extra_env" {
-  description = "Extra environment variables passed to the worker container (key=value pairs)"
-  type        = map(string)
-  default     = {}
-}
