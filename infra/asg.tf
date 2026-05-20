@@ -17,7 +17,7 @@ locals {
   gpu_instances = ["g4dn.xlarge", "g4dn.2xlarge", "g5.xlarge"]
   cpu_instances = ["c5.2xlarge", "m5.2xlarge", "c6i.2xlarge"]
   instance_types = var.use_gpu ? local.gpu_instances : local.cpu_instances
-  gpu_flag       = var.use_gpu ? "--gpus all \\" : ""
+  gpu_flag       = var.use_gpu ? "--gpus all" : ""
 
   user_data = <<-EOF
     #!/bin/bash
@@ -26,8 +26,7 @@ locals {
     aws ecr get-login-password --region ${var.region} | \
       docker login --username AWS --password-stdin $REGISTRY
     docker pull ${var.ecr_image_uri}
-    docker run -d \
-      ${local.gpu_flag}
+    docker run -d ${local.gpu_flag} \
       --restart unless-stopped \
       --log-driver=awslogs \
       --log-opt awslogs-region=${var.region} \
