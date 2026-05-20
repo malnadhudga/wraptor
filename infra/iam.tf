@@ -56,7 +56,7 @@ resource "aws_iam_role_policy" "ec2_worker" {
           "ecr:BatchGetImage",
           "ecr:GetDownloadUrlForLayer"
         ]
-        Resource = aws_ecr_repository.worker.arn
+        Resource = "arn:aws:ecr:${var.region}:${data.aws_caller_identity.current.account_id}:repository/${var.name}"
       },
       {
         Sid    = "CloudWatchLogs"
