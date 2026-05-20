@@ -1,4 +1,2 @@
-resource "aws_ecr_repository" "worker" {
-  name                 = var.name
-  image_tag_mutability = "MUTABLE"
-}
+# ECR repo is created by deploy.sh before docker build/push
+# Terraform does not manage it to avoid chicken-and-egg ordering issues
