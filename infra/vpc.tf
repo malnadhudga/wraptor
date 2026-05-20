@@ -11,7 +11,7 @@ data "aws_subnets" "default" {
 
 resource "aws_security_group" "worker" {
   name        = "${var.name}-worker-sg"
-  description = "Wraptor worker — outbound only"
+  description = "Wraptor worker - outbound only"
   vpc_id      = data.aws_vpc.default.id
 
   egress {
