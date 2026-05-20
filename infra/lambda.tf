@@ -43,7 +43,7 @@ resource "aws_lambda_function" "dlq_alert_handler" {
     variables = {
       SNS_TOPIC_ARN = aws_sns_topic.alerts.arn
       LOG_GROUP     = aws_cloudwatch_log_group.worker.name
-      AWS_REGION    = var.region
+      WRAPTOR_REGION = var.region
       WRAPTOR_NAME  = var.name
     }
   }

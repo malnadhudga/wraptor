@@ -12,7 +12,7 @@ logs   = boto3.client('logs')
 
 SNS_TOPIC_ARN   = os.environ['SNS_TOPIC_ARN']
 LOG_GROUP       = os.environ['LOG_GROUP']
-AWS_REGION      = os.environ['AWS_REGION']
+AWS_REGION      = os.environ['WRAPTOR_REGION']
 WRAPTOR_NAME    = os.environ['WRAPTOR_NAME']
 
 
