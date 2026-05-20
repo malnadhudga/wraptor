@@ -30,3 +30,8 @@ variable "input_extension" {
   default     = ".fasta"
 }
 
+variable "use_gpu" {
+  description = "Whether to use GPU instances and pass --gpus all to docker run"
+  default     = true
+}
+

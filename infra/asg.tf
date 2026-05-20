@@ -14,6 +14,8 @@ data "aws_ami" "deep_learning" {
 }
 
 locals {
+  gpu_flag  = var.use_gpu ? "--gpus all" : ""
+
   user_data = <<-EOF
     #!/bin/bash
     set -e
@@ -21,8 +23,7 @@ locals {
     aws ecr get-login-password --region ${var.region} | \
       docker login --username AWS --password-stdin $REGISTRY
     docker pull ${var.ecr_image_uri}
-    docker run -d \
-      --gpus all \
+    docker run -d ${local.gpu_flag} \
       --restart unless-stopped \
       --log-driver=awslogs \
       --log-opt awslogs-region=${var.region} \
