@@ -1,8 +1,11 @@
-FROM wraptor-base:latest
+FROM 119492371915.dkr.ecr.us-east-1.amazonaws.com/boltz2:latest
 
-RUN pip3 install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
- && pip3 install --no-cache-dir chronos-forecasting transformers pandas
+COPY wrapper/requirements.txt /tmp/wraptor-req.txt
+RUN pip3 install --no-cache-dir -r /tmp/wraptor-req.txt
 
-COPY predict.py /app/predict.py
-COPY run.sh /app/run.sh
-RUN chmod +x /app/run.sh
+WORKDIR /app
+COPY wrapper/worker.py .
+COPY run.sh .
+RUN chmod +x run.sh
+
+CMD ["python3", "worker.py"]

@@ -24,4 +24,4 @@ set -e
 #
 # ---------------------------------------------------------------------
 
-python3 /app/predict.py
+boltz predict /tmp/input/data.yaml --use_msa_server --out-dir /tmp/output

@@ -80,11 +80,11 @@ def download_input(s3_path: str):
 
 
 def upload_output(job_id: str):
-    files = list(OUTPUT_DIR.glob('*'))
+    files = [f for f in OUTPUT_DIR.rglob('*') if f.is_file()]
     if not files:
         raise RuntimeError("run.sh produced no output files")
     for f in files:
-        key = f"{job_id}/{f.name}"
+        key = f"{job_id}/{f.relative_to(OUTPUT_DIR)}"
         s3.upload_file(str(f), OUTPUT_BUCKET, key)
         logger.info(f"Uploaded → s3://{OUTPUT_BUCKET}/{key}")
 
