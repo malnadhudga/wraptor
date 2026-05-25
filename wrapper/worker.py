@@ -90,7 +90,7 @@ def upload_output(job_id: str):
 
 
 def process(message: dict):
-    body          = json.loads(message['Body'])
+    body          = json.loads(message['Body'].lstrip('\ufeff'))
     job_id        = body['job_id']
     input_s3_path = body['input_s3_path']
     receipt_handle = message['ReceiptHandle']
