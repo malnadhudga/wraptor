@@ -1,0 +1,28 @@
+version: 0.2
+
+# Builds the Wraptor worker image and pushes it to ECR.
+# Run by AWS CodeBuild, triggered from deploy.sh / redeploy.sh via
+# `aws codebuild start-build`. The following variables are supplied as
+# environment-variable overrides at build start:
+#   ECR_REGISTRY   e.g. 123456789012.dkr.ecr.us-east-1.amazonaws.com
+#   ECR_IMAGE_URI  e.g. 123456789012.dkr.ecr.us-east-1.amazonaws.com/vespag:latest
+#   IMAGE_NAME     local image tag / ECR repo name (e.g. vespag)
+# AWS_DEFAULT_REGION is provided automatically by CodeBuild.
+
+phases:
+  pre_build:
+    commands:
+      - echo "Logging in to Amazon ECR ($ECR_REGISTRY)..."
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+  build:
+    commands:
+      - echo "Building base image..."
+      - docker build -f Dockerfile.base -t wraptor-base:latest .
+      - echo "Building model image..."
+      - docker build -t "$IMAGE_NAME:latest" .
+      - docker tag "$IMAGE_NAME:latest" "$ECR_IMAGE_URI"
+  post_build:
+    commands:
+      - echo "Pushing $ECR_IMAGE_URI..."
+      - docker push "$ECR_IMAGE_URI"
+      - echo "Done."

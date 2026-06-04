@@ -17,3 +17,11 @@ output "dlq_url" {
 output "ecr_repository_url" {
   value = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.name}"
 }
+
+output "build_source_bucket" {
+  value = aws_s3_bucket.build_source.bucket
+}
+
+output "codebuild_project" {
+  value = aws_codebuild_project.builder.name
+}

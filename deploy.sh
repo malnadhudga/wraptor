@@ -21,25 +21,32 @@ echo "Deploying Wraptor: $NAME ($REGION)"
 # 1. Create ECR repo (skip if exists)
 aws ecr create-repository --repository-name "$NAME" --region "$REGION" 2>/dev/null || true
 
-# 2. Login to ECR
-aws ecr get-login-password --region "$REGION" | \
-  docker login --username AWS --password-stdin "$ECR_REGISTRY"
-
-# 3. Build base image
-echo "Building base image..."
-docker build -f Dockerfile.base -t wraptor-base:latest .
-
-# 4. Build model image
-echo "Building model image..."
-docker build -t "$NAME:latest" .
-
-# 5. Tag and push
-docker tag "$NAME:latest" "$ECR_IMAGE_URI"
-docker push "$ECR_IMAGE_URI"
-
-# 6. Terraform
 cd infra/
 terraform init -upgrade
+
+# 2. Provision the build infrastructure (CodeBuild project + source bucket) first
+echo "Provisioning build infrastructure..."
+terraform apply \
+  -target=aws_s3_bucket.build_source \
+  -target=aws_iam_role.codebuild \
+  -target=aws_iam_role_policy.codebuild \
+  -target=aws_codebuild_project.builder \
+  -var="name=$NAME" \
+  -var="region=$REGION" \
+  -var="email=$EMAIL" \
+  -var="ecr_image_uri=$ECR_IMAGE_URI" \
+  -var="input_extension=$INPUT_EXTENSION" \
+  -auto-approve
+
+SOURCE_BUCKET=$(terraform output -raw build_source_bucket)
+CODEBUILD_PROJECT=$(terraform output -raw codebuild_project)
+cd ..
+
+# 3. Build and push the image with AWS CodeBuild
+./build_image.sh "$NAME" "$REGION" "$SOURCE_BUCKET" "$CODEBUILD_PROJECT" "$ECR_REGISTRY" "$ECR_IMAGE_URI"
+
+# 4. Provision the rest of the infrastructure
+cd infra/
 terraform apply \
   -var="name=$NAME" \
   -var="region=$REGION" \
@@ -48,7 +55,7 @@ terraform apply \
   -var="input_extension=$INPUT_EXTENSION" \
   -auto-approve
 
-# 7. Capture outputs
+# 5. Capture outputs
 QUEUE_URL=$(terraform output -raw sqs_queue_url)
 INPUT_BUCKET=$(terraform output -raw input_bucket_name)
 OUTPUT_BUCKET=$(terraform output -raw output_bucket_name)

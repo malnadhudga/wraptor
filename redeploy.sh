@@ -16,20 +16,14 @@ ECR_IMAGE_URI="$ECR_REGISTRY/$NAME:latest"
 
 echo "Redeploying image: $NAME ($REGION)"
 
-# Login to ECR
-aws ecr get-login-password --region "$REGION" | \
-  docker login --username AWS --password-stdin "$ECR_REGISTRY"
+# Read the build resources provisioned by deploy.sh
+cd infra/
+SOURCE_BUCKET=$(terraform output -raw build_source_bucket)
+CODEBUILD_PROJECT=$(terraform output -raw codebuild_project)
+cd ..
 
-# Rebuild base and model image
-echo "Building base image..."
-docker build -f Dockerfile.base -t wraptor-base:latest .
-
-echo "Building model image..."
-docker build -t "$NAME:latest" .
-
-# Push new image
-docker tag "$NAME:latest" "$ECR_IMAGE_URI"
-docker push "$ECR_IMAGE_URI"
+# Rebuild and push the image with AWS CodeBuild
+./build_image.sh "$NAME" "$REGION" "$SOURCE_BUCKET" "$CODEBUILD_PROJECT" "$ECR_REGISTRY" "$ECR_IMAGE_URI"
 
 echo ""
 echo "Image pushed: $ECR_IMAGE_URI"
