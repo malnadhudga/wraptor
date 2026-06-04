@@ -65,5 +65,11 @@ Results appear at `s3://your-output-bucket/{job_id}/`
 ## Requirements
 
 - AWS CLI configured (`aws configure`)
-- Docker
 - Terraform >= 1.0
+- Python 3 (used to package the build source)
+
+The worker image is built in **AWS CodeBuild** and pushed to ECR — Docker is not
+required on your machine. `deploy.sh` provisions the CodeBuild project, packages
+the repo to an S3 source bucket, runs the build, then applies the rest of the
+infrastructure. Use `redeploy.sh` to rebuild the image after editing `run.sh`,
+the `Dockerfile`, or your model code.
