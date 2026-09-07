@@ -24,13 +24,13 @@ resource "aws_iam_role_policy" "ec2_worker" {
         Sid      = "S3Input"
         Effect   = "Allow"
         Action   = ["s3:GetObject"]
-        Resource = "${aws_s3_bucket.input.arn}/*"
+        Resource = "${aws_s3_bucket.assets.arn}/${local.input_prefix}/*"
       },
       {
         Sid      = "S3Output"
         Effect   = "Allow"
         Action   = ["s3:PutObject"]
-        Resource = "${aws_s3_bucket.output.arn}/*"
+        Resource = "${aws_s3_bucket.assets.arn}/${local.output_prefix}/*"
       },
       {
         Sid    = "SQS"

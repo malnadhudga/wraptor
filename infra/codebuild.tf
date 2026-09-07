@@ -1,12 +1,7 @@
 # ── Image builds (AWS CodeBuild → ECR) ───────────────────────────────────────
 # The worker image is built in AWS CodeBuild instead of on the local machine.
-# deploy.sh / redeploy.sh package the repo, upload it to the source bucket, and
-# start a build that pushes the image to ECR.
-
-resource "aws_s3_bucket" "build_source" {
-  bucket        = "${var.name}-build-${data.aws_caller_identity.current.account_id}"
-  force_destroy = true
-}
+# deploy.sh / redeploy.sh package the repo, upload it to the build/ prefix of the
+# assets bucket, and start a build that pushes the image to ECR.
 
 resource "aws_iam_role" "codebuild" {
   name = "${var.name}-codebuild"
@@ -62,7 +57,7 @@ resource "aws_iam_role_policy" "codebuild" {
         Sid      = "SourceBucket"
         Effect   = "Allow"
         Action   = ["s3:GetObject", "s3:GetObjectVersion"]
-        Resource = "${aws_s3_bucket.build_source.arn}/*"
+        Resource = "${aws_s3_bucket.assets.arn}/${local.build_prefix}/*"
       }
     ]
   })
@@ -86,7 +81,7 @@ resource "aws_codebuild_project" "builder" {
 
   source {
     type      = "S3"
-    location  = "${aws_s3_bucket.build_source.bucket}/source.zip"
+    location  = "${aws_s3_bucket.assets.bucket}/${local.build_prefix}/source.zip"
     buildspec = "buildspec.yml"
   }
 }

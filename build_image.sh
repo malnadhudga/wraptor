@@ -1,17 +1,18 @@
 #!/bin/bash
-# Packages the repo, uploads it to the CodeBuild source bucket, and runs the
-# CodeBuild project that builds the worker image and pushes it to ECR.
+# Packages the repo, uploads it to the build/ prefix of the assets bucket, and
+# runs the CodeBuild project that builds the worker image and pushes it to ECR.
 #
-# Usage: ./build_image.sh <name> <region> <source_bucket> <codebuild_project> <ecr_registry> <ecr_image_uri>
+# Usage: ./build_image.sh <name> <region> <assets_bucket> <codebuild_project> <ecr_registry> <ecr_image_uri>
 set -e
 
 NAME=$1
 REGION=$2
-SOURCE_BUCKET=$3
+ASSETS_BUCKET=$3
 CODEBUILD_PROJECT=$4
 ECR_REGISTRY=$5
 ECR_IMAGE_URI=$6
 
+SOURCE_KEY="build/source.zip"
 SOURCE_ZIP="$(mktemp -d)/source.zip"
 
 # Package the repo (excluding local-only and infra dirs) into a zip for CodeBuild.
@@ -34,8 +35,8 @@ with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
 print("Packaged:", out)
 PY
 
-echo "Uploading source to s3://$SOURCE_BUCKET/source.zip ..."
-aws s3 cp "$SOURCE_ZIP" "s3://$SOURCE_BUCKET/source.zip" --region "$REGION"
+echo "Uploading source to s3://$ASSETS_BUCKET/$SOURCE_KEY ..."
+aws s3 cp "$SOURCE_ZIP" "s3://$ASSETS_BUCKET/$SOURCE_KEY" --region "$REGION"
 
 echo "Starting CodeBuild project: $CODEBUILD_PROJECT ..."
 BUILD_ID=$(aws codebuild start-build \

@@ -21,7 +21,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 QUEUE_URL       = os.environ['SQS_QUEUE_URL']
-OUTPUT_BUCKET   = os.environ['OUTPUT_BUCKET']
+ASSETS_BUCKET   = os.environ['ASSETS_BUCKET']
+OUTPUT_PREFIX   = os.environ.get('OUTPUT_PREFIX', 'output')
 INPUT_EXTENSION = os.environ.get('INPUT_EXTENSION', '.fasta')
 AWS_REGION      = os.environ['AWS_REGION']
 
@@ -84,9 +85,9 @@ def upload_output(job_id: str):
     if not files:
         raise RuntimeError("run.sh produced no output files")
     for f in files:
-        key = f"{job_id}/{f.name}"
-        s3.upload_file(str(f), OUTPUT_BUCKET, key)
-        logger.info(f"Uploaded → s3://{OUTPUT_BUCKET}/{key}")
+        key = f"{OUTPUT_PREFIX}/{job_id}/{f.name}"
+        s3.upload_file(str(f), ASSETS_BUCKET, key)
+        logger.info(f"Uploaded → s3://{ASSETS_BUCKET}/{key}")
 
 
 def process(message: dict):
