@@ -56,11 +56,24 @@ Send a JSON message to the SQS queue printed after deploy:
 ```json
 {
   "job_id":        "any-unique-id",
-  "input_s3_path": "s3://your-input-bucket/your-file.fasta"
+  "input_s3_path": "s3://<name>-agentic-assets/input/your-file.fasta"
 }
 ```
 
-Results appear at `s3://your-output-bucket/{job_id}/`
+Results appear at `s3://<name>-agentic-assets/output/{job_id}/`
+
+## S3 layout
+
+Each deployment gets a single bucket, `<name>-agentic-assets`, split by prefix:
+
+| Prefix             | Contents                            |
+| ------------------ | ----------------------------------- |
+| `input/`           | job inputs you upload               |
+| `output/{job_id}/` | results written by the worker       |
+| `build/`           | `source.zip` packaged for CodeBuild |
+
+The worker is only permitted to read under `input/` and write under `output/`, so
+job inputs must be uploaded to the `input/` prefix.
 
 ## Requirements
 

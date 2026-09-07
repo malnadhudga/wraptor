@@ -24,10 +24,10 @@ aws ecr create-repository --repository-name "$NAME" --region "$REGION" 2>/dev/nu
 cd infra/
 terraform init -upgrade
 
-# 2. Provision the build infrastructure (CodeBuild project + source bucket) first
+# 2. Provision the build infrastructure (CodeBuild project + assets bucket) first
 echo "Provisioning build infrastructure..."
 terraform apply \
-  -target=aws_s3_bucket.build_source \
+  -target=aws_s3_bucket.assets \
   -target=aws_iam_role.codebuild \
   -target=aws_iam_role_policy.codebuild \
   -target=aws_codebuild_project.builder \
@@ -38,12 +38,12 @@ terraform apply \
   -var="input_extension=$INPUT_EXTENSION" \
   -auto-approve
 
-SOURCE_BUCKET=$(terraform output -raw build_source_bucket)
+ASSETS_BUCKET=$(terraform output -raw assets_bucket_name)
 CODEBUILD_PROJECT=$(terraform output -raw codebuild_project)
 cd ..
 
 # 3. Build and push the image with AWS CodeBuild
-./build_image.sh "$NAME" "$REGION" "$SOURCE_BUCKET" "$CODEBUILD_PROJECT" "$ECR_REGISTRY" "$ECR_IMAGE_URI"
+./build_image.sh "$NAME" "$REGION" "$ASSETS_BUCKET" "$CODEBUILD_PROJECT" "$ECR_REGISTRY" "$ECR_IMAGE_URI"
 
 # 4. Provision the rest of the infrastructure
 cd infra/
@@ -57,8 +57,7 @@ terraform apply \
 
 # 5. Capture outputs
 QUEUE_URL=$(terraform output -raw sqs_queue_url)
-INPUT_BUCKET=$(terraform output -raw input_bucket_name)
-OUTPUT_BUCKET=$(terraform output -raw output_bucket_name)
+ASSETS_BUCKET=$(terraform output -raw assets_bucket_name)
 DLQ_URL=$(terraform output -raw dlq_url)
 
 echo ""
@@ -76,10 +75,11 @@ echo "-------------------------------------"
 echo "  $QUEUE_URL"
 echo ""
 echo "-------------------------------------"
-echo " S3 Buckets"
+echo " S3 Bucket"
 echo "-------------------------------------"
-echo "  Input  : s3://$INPUT_BUCKET"
-echo "  Output : s3://$OUTPUT_BUCKET"
+echo "  Bucket : s3://$ASSETS_BUCKET"
+echo "  Input  : s3://$ASSETS_BUCKET/input/"
+echo "  Output : s3://$ASSETS_BUCKET/output/"
 echo ""
 echo "-------------------------------------"
 echo " Failed Jobs (DLQ)"
@@ -91,9 +91,9 @@ echo " Job Format"
 echo "-------------------------------------"
 echo "  {"
 echo "    \"job_id\":        \"any-unique-id\","
-echo "    \"input_s3_path\": \"s3://$INPUT_BUCKET/your-file.fasta\""
+echo "    \"input_s3_path\": \"s3://$ASSETS_BUCKET/input/your-file.fasta\""
 echo "  }"
 echo ""
-echo "  Results at: s3://$OUTPUT_BUCKET/{job_id}/"
+echo "  Results at: s3://$ASSETS_BUCKET/output/{job_id}/"
 echo ""
 echo "====================================="

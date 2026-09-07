@@ -33,7 +33,8 @@ locals {
       --log-opt awslogs-group=/wraptor/${var.name}/worker \
       --log-opt awslogs-create-group=true \
       -e SQS_QUEUE_URL=${aws_sqs_queue.jobs.url} \
-      -e OUTPUT_BUCKET=${aws_s3_bucket.output.bucket} \
+      -e ASSETS_BUCKET=${aws_s3_bucket.assets.bucket} \
+      -e OUTPUT_PREFIX=${local.output_prefix} \
       -e INPUT_EXTENSION=${var.input_extension} \
       -e AWS_REGION=${var.region} \
       ${var.ecr_image_uri}

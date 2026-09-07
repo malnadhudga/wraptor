@@ -18,12 +18,12 @@ echo "Redeploying image: $NAME ($REGION)"
 
 # Read the build resources provisioned by deploy.sh
 cd infra/
-SOURCE_BUCKET=$(terraform output -raw build_source_bucket)
+ASSETS_BUCKET=$(terraform output -raw assets_bucket_name)
 CODEBUILD_PROJECT=$(terraform output -raw codebuild_project)
 cd ..
 
 # Rebuild and push the image with AWS CodeBuild
-./build_image.sh "$NAME" "$REGION" "$SOURCE_BUCKET" "$CODEBUILD_PROJECT" "$ECR_REGISTRY" "$ECR_IMAGE_URI"
+./build_image.sh "$NAME" "$REGION" "$ASSETS_BUCKET" "$CODEBUILD_PROJECT" "$ECR_REGISTRY" "$ECR_IMAGE_URI"
 
 echo ""
 echo "Image pushed: $ECR_IMAGE_URI"
